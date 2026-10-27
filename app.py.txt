@@ -1,0 +1,322 @@
+import pandas as pd
+import streamlit as st
+
+# Configuración de la página en modo ancho
+st.set_page_config(
+    page_title="Tablero de Operaciones - Aeropuerto / Hub",
+    page_icon="✈️",
+    layout="wide",
+)
+
+# Estilo visual personalizado (Estética Pantalla de Aeropuerto / FIDS)
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-color: #0b0f19;
+        color: #f0f2f6;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    h1, h2, h3 {
+        font-family: 'Courier New', Courier, monospace;
+        color: #ffb703;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .airport-header {
+        background-color: #1a1f2c;
+        padding: 20px;
+        border-left: 6px solid #ffb703;
+        border-bottom: 2px solid #ffb703;
+        margin-bottom: 25px;
+        border-radius: 4px;
+    }
+    .stDataFrame {
+        border: 2px solid #ffb703;
+        border-radius: 5px;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
+# Encabezado estilo FIDS
+st.markdown(
+    """
+    <div class="airport-header">
+        <h1>✈️ FIDS - CONTROL DE SALIDAS & HUB LOGÍSTICA</h1>
+        <p style="color: #8ecae6; margin: 0; font-size: 16px;">SISTEMA DE MONITOREO Y EDICIÓN EN TIEMPO REAL</p>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
+
+# Datos iniciales basados en tu tabla de operaciones
+data = {
+    "CARRIER": [
+        "ERICK",
+        "ERICK",
+        "ERICK",
+        "CECI",
+        "CECI",
+        "CECI",
+        "LUKA",
+        "LUKA",
+        "NICHOLAS",
+        "NICHOLAS",
+        "GUSTAVO GARRIDO",
+        "JOSÉ EDUARDO REYES",
+        "GUSTAVO OSORNIO",
+        "JOSÉ ALBINO",
+    ],
+    "SITE": [
+        "MXXEM2",
+        "MXXEM2",
+        "MXCD07",
+        "MXCD09",
+        "MXXEM3",
+        "MXXEM3",
+        "MXXEM3",
+        "MXXEM3",
+        "MXXEM3",
+        "MXXEM3",
+        "MXCD06",
+        "MXCD05",
+        "MXCD02",
+        "BACKUP",
+    ],
+    "# VEHÍCULOS": [1, 1, 1, 2, 2, 1, 2, 1, 2, 1, 1, 1, 1, 1],
+    "# VIAJES": [1, 1, 1, 1, 3, 1, 3, 1, 3, 1, 1, 1, 1, 1],
+    "TIPO VEHÍCULO": [
+        "T53",
+        "THN",
+        "5.4",
+        "THN",
+        "T53",
+        "T53",
+        "T53",
+        "T53",
+        "T53",
+        "T53",
+        "5.4",
+        "THN",
+        "THN",
+        "4.5",
+    ],
+    "SCHEDULE": [
+        "Lun-Mar",
+        "Mié-Sáb",
+        "Lun-Vie",
+        "Lun-Vie",
+        "Lun-Vie",
+        "Domingo",
+        "Lun-Vie",
+        "Domingo",
+        "Lun-Vie",
+        "Domingo",
+        "Lun-Vie",
+        "Lun-Vie",
+        "Lun-Vie",
+        "",
+    ],
+    "ETD HUB": [
+        "09:00",
+        "09:00",
+        "14:00",
+        "10:00",
+        "13:00 / 17:00 / 22:00",
+        "20:00",
+        "13:00 / 17:00 / 22:00",
+        "20:00",
+        "13:00 / 17:00 / 22:00",
+        "20:00",
+        "10:00",
+        "14:00",
+        "14:00",
+        "",
+    ],
+    "ETA MELI": [
+        "09:30",
+        "09:30",
+        "15:00",
+        "11:00",
+        "14:00 / 18:00 / 23:00",
+        "21:00",
+        "14:00 / 18:00 / 23:00",
+        "21:00",
+        "14:00 / 18:00 / 23:00",
+        "21:00",
+        "12:00",
+        "15:00",
+        "16:00",
+        "",
+    ],
+    "CPT": [
+        "12:00",
+        "12:00",
+        "17:00",
+        "13:00",
+        "16:00 / 20:00 / 01:00",
+        "23:00",
+        "16:00 / 20:00 / 01:00",
+        "23:00",
+        "16:00 / 20:00 / 01:00",
+        "23:00",
+        "14:00",
+        "17:00",
+        "18:00",
+        "",
+    ],
+    "ETA HUB": [
+        "13:00",
+        "13:00",
+        "18:00",
+        "14:00",
+        "17:00 / 21:00 / 02:00",
+        "00:00",
+        "17:00 / 21:00 / 02:00",
+        "00:00",
+        "17:00 / 21:00 / 02:00",
+        "00:00",
+        "15:00",
+        "18:00",
+        "19:00",
+        "",
+    ],
+    "INBOUND HUB": [
+        "13:00",
+        "13:00",
+        "19:00",
+        "15:00",
+        "18:00 / 22:00 / 03:00",
+        "01:00",
+        "18:00 / 22:00 / 03:00",
+        "01:00",
+        "18:00 / 22:00 / 03:00",
+        "01:00",
+        "16:00",
+        "19:00",
+        "20:00",
+        "",
+    ],
+    "MATRÍCULA": [
+        "77BL5D | 74VAW4",
+        "6914ZR",
+        "5036ZR",
+        "8683ZR / 8682ZR",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "949FE9",
+        "255FE6",
+        "6914ZR",
+        "KS7275A",
+    ],
+    "TIPO FLOTA": [
+        "3PL",
+        "PROPIA",
+        "3PL",
+        "3PL",
+        "3PL",
+        "3PL",
+        "3PL",
+        "3PL",
+        "3PL",
+        "3PL",
+        "PROPIA",
+        "PROPIA",
+        "PROPIA",
+        "PROPIA",
+    ],
+    "OPERADOR": [
+        "ALEJANDRO MARTINEZ ISIDRO",
+        "LUIS ANTONIO TORRES",
+        "LUIS ANTONIO TORRES",
+        "EDGAR ALFREDO SALAZAR / ARTURO SERRANO",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "GUSTAVO GARRIDO",
+        "JOSÉ EDUARDO REYES",
+        "GUSTAVO OSORNIO",
+        "JOSÉ ALBINO",
+    ],
+    "CAPACIDAD PALLET": [
+        24,
+        12,
+        8,
+        12,
+        24,
+        24,
+        24,
+        24,
+        24,
+        24,
+        8,
+        12,
+        12,
+        6,
+    ],
+    "CAPACIDAD PAQUETES": [
+        8352,
+        4176,
+        2784,
+        8352,
+        50112,
+        8352,
+        50112,
+        8352,
+        50112,
+        8352,
+        2784,
+        4176,
+        4176,
+        2088,
+    ],
+}
+
+df = pd.DataFrame(data)
+
+# Barra lateral para alternar modos
+st.sidebar.header("🎛️ Panel de Control")
+modo = st.sidebar.radio(
+    "Seleccionar vista:", ["✈️ Tablero en Vivo (FIDS)", "✏️ Editor de Datos"]
+)
+
+# Manejo de estado para que los cambios persistan al cambiar de pestaña
+if "df_data" not in st.session_state:
+    st.session_state["df_data"] = df
+
+if modo == "✏️ Editor de Datos":
+    st.subheader("📝 Modificar Tabla de Operaciones")
+    st.markdown(
+        "Haz doble clic en cualquier celda para editar los datos, agregar filas o eliminar registros. Los cambios se reflejarán inmediatamente en el tablero."
+    )
+    # Tabla interactiva editable de Streamlit
+    df_editado = st.data_editor(
+        st.session_state["df_data"], num_rows="dynamic", use_container_width=True
+    )
+    st.session_state["df_data"] = df_editado
+else:
+    df_actual = st.session_state["df_data"]
+
+    # Tarjetas de métricas rápidas superiores estilo aeropuerto
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Rutas Activas", len(df_actual))
+    col2.metric("Vehículos Totales", int(df_actual["# VEHÍCULOS"].sum()))
+    col3.metric("Capacidad Pallets", int(df_actual["CAPACIDAD PALLET"].sum()))
+    col4.metric(
+        "Capacidad Paquetes", int(df_actual["CAPACIDAD PAQUETES"].sum())
+    )
+
+    st.markdown("---")
+    st.subheader("📊 Panel General de Estatus")
+
+    # Mostrar la tabla con el diseño limpio
+    st.dataframe(df_actual, use_container_width=True, height=520)
